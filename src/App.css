@@ -1,0 +1,41 @@
+.app-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+  }
+  
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .content-wrapper {
+    padding: 2rem;
+    overflow-y: auto;
+  }
+  
+  .content-header {
+    margin-bottom: 2rem;
+  }
+  
+  .selected-product {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: #e3efff;
+    border-radius: 8px;
+  }
+  
+  .product-label {
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+  
+  .product-name {
+    color: #0066ff;
+    font-weight: 500;
+  }
+  
