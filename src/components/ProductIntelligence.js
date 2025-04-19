@@ -1,25 +1,15 @@
-import React, { useState, useRef } from "react";
-import "./ProductIntelligence.css";
+import React, { useState } from 'react';
+import './ProductIntelligence.css';
 
 const ProductIntelligence = () => {
-  const [activeSection, setActiveSection] = useState({
-    product: "write",
-    icp: "write"
+  const [activeTab, setActiveTab] = useState({
+    product: 'write',
+    icp: 'write'
   });
 
-  const [inputData, setInputData] = useState({
-    product: "",
-    icp: ""
-  });
-
-  const [files, setFiles] = useState({
-    product: null,
-    icp: null
-  });
-
-  const [descriptions, setDescriptions] = useState({
-    product: [],
-    icp: []
+  const [inputValues, setInputValues] = useState({
+    product: '',
+    icp: ''
   });
 
   const [loading, setLoading] = useState({
@@ -27,375 +17,195 @@ const ProductIntelligence = () => {
     icp: false
   });
 
-  const [urlData, setUrlData] = useState({
-    product: "",
-    loading: false,
-    error: null
+  const [summaries, setSummaries] = useState({
+    product: '',
+    icp: ''
   });
 
-  const [documentAnalysis, setDocumentAnalysis] = useState({
-    product: null,
-    icp: null
+  const [isEditing, setIsEditing] = useState({
+    product: false,
+    icp: false
   });
 
-  const fileRefs = {
-    product: useRef(null),
-    icp: useRef(null)
-  };
-
-  const handleTextInput = (section, value) => {
-    setInputData(prev => ({
+  const handleInputChange = (section, value) => {
+    setInputValues(prev => ({
       ...prev,
       [section]: value
     }));
   };
 
-  const handleUrlFetch = async () => {
-    if (!urlData.product) return;
-
-    setUrlData(prev => ({ ...prev, loading: true, error: null }));
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const processedData = {
-        title: "Product Information from URL",
-        summary: [
-          "• Extracted product features and specifications",
-          "• Identified key benefits and use cases",
-          "• Analyzed pricing information",
-          "• Gathered technical specifications"
-        ],
-        metadata: {
-          source: urlData.product,
-          timestamp: new Date().toISOString()
-        }
-      };
-
-      setDescriptions(prev => ({
-        ...prev,
-        product: processedData.summary
-      }));
-    } catch (error) {
-      setUrlData(prev => ({ 
-        ...prev, 
-        error: "Failed to process URL. Please try again." 
-      }));
-    } finally {
-      setUrlData(prev => ({ ...prev, loading: false }));
-    }
-  };
-
-  const handleFileUpload = async (section, event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const allowedTypes = {
-      'application/pdf': 'PDF',
-      'text/plain': 'TXT',
-      'application/msword': 'DOC',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX'
-    };
-
-    if (!allowedTypes[file.type]) {
-      alert(`Please upload a valid ${Object.values(allowedTypes).join(', ')} file`);
-      return;
-    }
-
+  const handleSubmit = (section) => {
+    if (!inputValues[section]) return;
     setLoading(prev => ({ ...prev, [section]: true }));
-    setFiles(prev => ({ ...prev, [section]: file }));
 
-    try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      const analysis = {
-        fileInfo: {
-          name: file.name,
-          type: allowedTypes[file.type],
-          size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-          lastModified: new Date(file.lastModified).toLocaleDateString()
-        },
-        content: {
-          summary: [
-            `📄 Analysis of ${file.name}:`,
-            '• Key points extracted from document',
-            '• Important features identified',
-            '• Relevant specifications found'
-          ],
-          details: {
-            keyPoints: ['Point 1', 'Point 2', 'Point 3'],
-            recommendations: ['Rec 1', 'Rec 2', 'Rec 3'],
-            metadata: {
-              pageCount: 5,
-              wordCount: 1500,
-              created: new Date().toLocaleDateString()
-            }
-          }
-        }
-      };
-
-      setDocumentAnalysis(prev => ({
+    setTimeout(() => {
+      setSummaries(prev => ({
         ...prev,
-        [section]: analysis
+        [section]: inputValues[section]
       }));
-
-      setDescriptions(prev => ({
-        ...prev,
-        [section]: analysis.content.summary
-      }));
-
-    } catch (error) {
-      alert('Error processing document. Please try again.');
-    } finally {
       setLoading(prev => ({ ...prev, [section]: false }));
-    }
+    }, 1000);
   };
 
-  const handleSubmit = () => {
-    // Process text inputs
-    Object.keys(inputData).forEach(section => {
-      if (inputData[section].trim()) {
-        const lines = inputData[section]
-          .split('\n')
-          .filter(line => line.trim())
-          .map(line => `• ${line.trim()}`);
-        
-        setDescriptions(prev => ({
-          ...prev,
-          [section]: lines
-        }));
-      }
-    });
+  const handleFileUpload = (section, file) => {
+    if (!file) return;
+    setLoading(prev => ({ ...prev, [section]: true }));
 
-    // Clear inputs after processing
-    setInputData({ product: "", icp: "" });
+    setTimeout(() => {
+      setSummaries(prev => ({
+        ...prev,
+        [section]: `Processed content from ${file.name}:\n• Key point 1\n• Key point 2\n• Key point 3`
+      }));
+      setLoading(prev => ({ ...prev, [section]: false }));
+    }, 1500);
   };
 
-  const renderInputSection = (section) => {
-    const isProduct = section === 'product';
-    const title = isProduct ? 'Product Overview' : 'Ideal Customer Profile (ICP)';
-    const placeholder = isProduct 
-      ? "Enter product information, features, and specifications..."
-      : "Enter ideal customer profile details, preferences, and requirements...";
+  const renderSection = (section, title) => (
+    <div className="section">
+      <h3 className="section-title">{title}</h3>
 
-    return (
-      <div className="section-card">
-        <div className="card-header">
-          <h2>{title}</h2>
-          <div className="status-indicator">
-            {loading[section] ? 'Processing...' : 'Ready'}
-          </div>
-        </div>
+      <div className="tabs">
+        <button
+          className={`tab ${activeTab[section] === 'write' ? 'active' : ''}`}
+          onClick={() => setActiveTab(prev => ({ ...prev, [section]: 'write' }))}
+        >
+          Write
+        </button>
+        <button
+          className={`tab ${activeTab[section] === 'upload' ? 'active' : ''}`}
+          onClick={() => setActiveTab(prev => ({ ...prev, [section]: 'upload' }))}
+        >
+          Upload Document
+        </button>
+        {section === 'product' && (
+          <button
+            className={`tab ${activeTab[section] === 'url' ? 'active' : ''}`}
+            onClick={() => setActiveTab(prev => ({ ...prev, [section]: 'url' }))}
+          >
+            Provide URL
+          </button>
+        )}
+      </div>
 
-        <div className="tabs-container">
-          <div className="tabs">
-            <button 
-              className={`tab ${activeSection[section] === 'write' ? 'active' : ''}`}
-              onClick={() => setActiveSection(prev => ({ ...prev, [section]: 'write' }))}
+      <div className="tab-content">
+        {activeTab[section] === 'write' && (
+          <div className="write-section">
+            <textarea
+              value={inputValues[section]}
+              onChange={(e) => handleInputChange(section, e.target.value)}
+              placeholder={`Enter your ${title.toLowerCase()} here...`}
+              className="input-textarea"
+            />
+            <button
+              className="submit-button"
+              onClick={() => handleSubmit(section)}
+              disabled={!inputValues[section] || loading[section]}
             >
-              <span className="tab-icon">✏️</span>
-              Write
+              {loading[section] ? 'Processing...' : 'Submit'}
             </button>
-            <button 
-              className={`tab ${activeSection[section] === 'upload' ? 'active' : ''}`}
-              onClick={() => setActiveSection(prev => ({ ...prev, [section]: 'upload' }))}
-            >
-              <span className="tab-icon">📎</span>
-              Upload Document
-            </button>
-            {isProduct && (
-              <button 
-                className={`tab ${activeSection[section] === 'url' ? 'active' : ''}`}
-                onClick={() => setActiveSection(prev => ({ ...prev, [section]: 'url' }))}
-              >
-                <span className="tab-icon">🔗</span>
-                Provide URL
-              </button>
-            )}
           </div>
-        </div>
+        )}
 
-        <div className="input-content">
-          {activeSection[section] === 'write' && (
-            <div className="write-section">
-              <textarea
-                className="input-textarea"
-                placeholder={placeholder}
-                value={inputData[section]}
-                onChange={(e) => handleTextInput(section, e.target.value)}
-              />
-            </div>
-          )}
+        {activeTab[section] === 'upload' && (
+          <div className="upload-section">
+            <input
+              type="file"
+              id={`file-${section}`}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFileUpload(section, file);
+              }}
+              accept=".pdf,.doc,.docx,.txt"
+              className="file-input"
+            />
+            <label htmlFor={`file-${section}`} className="upload-label">
+              <div className="upload-icon">📎</div>
+              <span>Click to upload or drag and drop</span>
+              <span className="file-types">PDF, DOC, DOCX, TXT</span>
+            </label>
+          </div>
+        )}
 
-          {activeSection[section] === 'upload' && (
-            <div 
-              className={`upload-section ${loading[section] ? 'loading' : ''}`}
-              onClick={() => fileRefs[section].current?.click()}
+        {section === 'product' && activeTab[section] === 'url' && (
+          <div className="url-section">
+            <input
+              type="url"
+              value={inputValues[section]}
+              onChange={(e) => handleInputChange(section, e.target.value)}
+              placeholder="Enter URL here..."
+              className="url-input"
+            />
+            <button
+              className="url-button"
+              onClick={() => handleSubmit(section)}
+              disabled={!inputValues[section] || loading[section]}
             >
-              <input
-                type="file"
-                ref={fileRefs[section]}
-                onChange={(e) => handleFileUpload(section, e)}
-                accept=".pdf,.doc,.docx,.txt"
-                hidden
-              />
-              
-              {files[section] ? (
-                <div className="file-preview">
-                  <span className="file-icon">📄</span>
-                  <span className="file-name">{files[section].name}</span>
-                  <button 
-                    className="remove-file"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setFiles(prev => ({ ...prev, [section]: null }));
-                      setDescriptions(prev => ({ ...prev, [section]: [] }));
-                    }}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ) : (
-                <div className="upload-prompt">
-                  <div className="upload-icon">📄</div>
-                  <p>Drag and drop your file here or click to browse</p>
-                  <p className="file-types">Supported: PDF, DOC, DOCX, TXT</p>
-                </div>
-              )}
-            </div>
-          )}
+              {loading[section] ? 'Processing...' : 'Process URL'}
+            </button>
+          </div>
+        )}
 
-          {activeSection[section] === 'url' && isProduct && (
-            <div className="url-section">
-              <div className="url-input-group">
-                <input 
-                  type="url" 
-                  placeholder="Enter URL to product documentation..."
-                  value={urlData.product}
-                  onChange={(e) => setUrlData(prev => ({ 
-                    ...prev, 
-                    product: e.target.value,
-                    error: null 
+        {loading[section] && (
+          <div className="loading">
+            <div className="spinner"></div>
+            <span>Processing...</span>
+          </div>
+        )}
+
+        {summaries[section] && (
+          <div className="summary-section">
+            <div className="summary-header">
+              <h4>{title} Summary</h4>
+              <div className="summary-actions">
+                <button
+                  className={`action-button ${isEditing[section] ? 'active' : ''}`}
+                  onClick={() => setIsEditing(prev => ({
+                    ...prev,
+                    [section]: !prev[section]
                   }))}
-                  className={`url-input ${urlData.error ? 'error' : ''}`}
-                />
-                <button 
-                  className={`url-fetch-btn ${urlData.loading ? 'loading' : ''}`}
-                  onClick={handleUrlFetch}
-                  disabled={urlData.loading || !urlData.product}
                 >
-                  {urlData.loading ? (
-                    <>
-                      <span className="spinner"></span>
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <span>Fetch</span>
-                      <span className="btn-icon">→</span>
-                    </>
-                  )}
+                  {isEditing[section] ? '👁️ View' : '✏️ Edit'}
+                </button>
+                <button
+                  className="save-button"
+                  onClick={() => setIsEditing(prev => ({
+                    ...prev,
+                    [section]: false
+                  }))}
+                >
+                  💾 Save
                 </button>
               </div>
-              {urlData.error && (
-                <div className="url-error">{urlData.error}</div>
+            </div>
+            <div className="summary-content">
+              {isEditing[section] ? (
+                <textarea
+                  value={summaries[section]}
+                  onChange={(e) => setSummaries(prev => ({
+                    ...prev,
+                    [section]: e.target.value
+                  }))}
+                  className="edit-textarea"
+                />
+              ) : (
+                <div className="view-content">
+                  {summaries[section].split('\n').map((line, i) => (
+                    <p key={i}>{line}</p>
+                  ))}
+                </div>
               )}
             </div>
-          )}
-        </div>
-
-        <div className="description-section">
-          <div className="description-header">
-            <h3>{isProduct ? 'Product Description' : 'ICP Summary'}</h3>
-            <div className="view-controls">
-              <button className="view-btn">Edit</button>
-              <button className="view-btn">View</button>
-            </div>
           </div>
-          
-          <div className="description-content">
-            {descriptions[section].length > 0 ? (
-              descriptions[section].map((line, index) => (
-                <div key={index} className="content-line">
-                  {line}
-                </div>
-              ))
-            ) : (
-              <div className="placeholder-content">
-                <div className="placeholder-line"></div>
-                <div className="placeholder-line"></div>
-                <div className="placeholder-line"></div>
-              </div>
-            )}
-          </div>
-        </div>
+        )}
       </div>
-    );
-  };
-
-  const renderDocumentAnalysis = (section) => {
-    const analysis = documentAnalysis[section];
-    if (!analysis) return null;
-
-    return (
-      <div className="document-analysis">
-        <div className="analysis-header">
-          <h4>Document Analysis</h4>
-          <span className="file-badge">{analysis.fileInfo.type}</span>
-        </div>
-        
-        <div className="analysis-details">
-          <div className="file-metadata">
-            <div className="metadata-item">
-              <span>Size:</span> {analysis.fileInfo.size}
-            </div>
-            <div className="metadata-item">
-              <span>Modified:</span> {analysis.fileInfo.lastModified}
-            </div>
-            {analysis.content.details.metadata.pageCount && (
-              <div className="metadata-item">
-                <span>Pages:</span> {analysis.content.details.metadata.pageCount}
-              </div>
-            )}
-          </div>
-
-          <div className="analysis-sections">
-            <div className="analysis-section">
-              <h5>Key Points</h5>
-              <ul>
-                {analysis.content.details.keyPoints.map((point, index) => (
-                  <li key={index}>{point}</li>
-                ))}
-              </ul>
-            </div>
-            
-            <div className="analysis-section">
-              <h5>Recommendations</h5>
-              <ul>
-                {analysis.content.details.recommendations.map((rec, index) => (
-                  <li key={index}>{rec}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
+    </div>
+  );
 
   return (
     <div className="product-intelligence">
-      <div className="sections-grid">
-        {renderInputSection('product')}
-        {renderInputSection('icp')}
-      </div>
-      
-      <div className="action-footer">
-        <button 
-          className="continue-btn"
-          onClick={handleSubmit}
-        >
-          Continue
-        </button>
+      <div className="grid-container">
+        {renderSection('product', 'Product Overview')}
+        {renderSection('icp', 'Ideal Customer Profile')}
       </div>
     </div>
   );
